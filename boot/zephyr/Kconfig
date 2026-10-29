@@ -503,6 +503,17 @@ config MCUBOOT_CLEANUP_ARM_CORE
 	  start-up code which can cause a module fault and potentially make the
 	  module irrecoverable.
 
+config MCUBOOT_DEINIT_DEVICES
+	bool "Deinitialize devices before chain-load the application"
+	depends on ARM
+	default y if SOC_FAMILY_REALTEK_BEE
+	select DEVICE_DEINIT_SUPPORT
+	help
+	  This option instructs MCUboot to call device_deinit() on every device,
+	  in reverse init order, before jumping to the application firmware, so
+	  the application starts with its peripherals in a predictable state.
+	  A device whose driver has no deinit is left as it is.
+
 config MCUBOOT_CLEANUP_RAM
 	bool "Perform RAM cleanup"
 	depends on CPU_CORTEX_M4 || CPU_CORTEX_M33

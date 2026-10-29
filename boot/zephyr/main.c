@@ -150,6 +150,19 @@ struct arm_vector_table {
 #endif
 };
 
+#if defined(CONFIG_MCUBOOT_DEINIT_DEVICES)
+static void deinit_devices(void)
+{
+    const struct device *devs;
+    size_t devc = z_device_get_all_static(&devs);
+
+    /* Reverse init order, so a device goes before the devices it uses */
+    for (const struct device *dev = devs + devc - 1; dev >= devs; dev--) {
+        (void)device_deinit(dev);
+    }
+}
+#endif
+
 static void do_boot(struct boot_rsp *rsp)
 {
     /* vt is static as it shall not land on the stack,
@@ -188,6 +201,10 @@ static void do_boot(struct boot_rsp *rsp)
 #ifdef CONFIG_USB_DEVICE_STACK
     /* Disable the USB to prevent it from firing interrupts */
     usb_disable();
+#endif
+#if defined(CONFIG_MCUBOOT_DEINIT_DEVICES)
+    /* Before the interrupt cleanup, so it clears what the deinit leaves pending */
+    deinit_devices();
 #endif
 #if CONFIG_MCUBOOT_CLEANUP_ARM_CORE
     cleanup_arm_interrupts(); /* Disable and acknowledge all interrupts */
